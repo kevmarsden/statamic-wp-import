@@ -13,6 +13,8 @@ use Statamic\Facades\Stache;
 use Statamic\Facades\Term;
 use Statamic\Facades\Taxonomy;
 use Symfony\Component\HttpFoundation\File\UploadedFile;
+use Illuminate\Support\Arr;
+use Illuminate\Support\Facades\Log;
 
 class Migrator
 {
@@ -62,7 +64,7 @@ class Migrator
     {
         $migration['pages'] = collect(
             $this->sortDeepest(
-                array_get($migration, 'pages', [])->all()
+                Arr::get($migration, 'pages', [])->all()
             )
         );
 
@@ -96,7 +98,7 @@ class Migrator
      */
     private function createTaxonomies()
     {
-        foreach (array_get($this->migration, 'taxonomies', []) as $taxonomy_slug => $taxonomy_data) {
+        foreach (Arr::get($this->migration, 'taxonomies', []) as $taxonomy_slug => $taxonomy_data) {
             $taxonomy = Taxonomy::findByHandle($taxonomy_slug);
 
             if (!$taxonomy) {
@@ -104,7 +106,7 @@ class Migrator
             }
 
             foreach ($taxonomy_data as $key => $value) {
-                $taxonomy->set($key, $value);
+                //$taxonomy->set($key, $value);
             }
 
             $taxonomy->save();
@@ -118,24 +120,37 @@ class Migrator
      */
     private function createTaxonomyTerms()
     {
-        foreach (array_get($this->migration, 'terms', []) as $taxonomy_slug => $terms) {
+        foreach (Arr::get($this->migration, 'terms', []) as $taxonomy_slug => $terms) {
+            $taxonomy = Taxonomy::findByHandle($taxonomy_slug);
+            if (!$taxonomy) {
+                Log::warning("Taxonomy not found: {$taxonomy_slug}");
+                continue;
+            }
+
             foreach ($terms as $term_slug => $term_data) {
                 // Skip if this term was not checked in the summary.
                 if (!$this->summary['taxonomies'][$taxonomy_slug]['terms'][$term_slug]['_checked']) {
                     continue;
                 }
 
-                $term = Term::findBySlug($term_slug, $taxonomy_slug);
+                try {
+                    $term = Term::query()
+                        ->where('taxonomy', $taxonomy_slug)
+                        ->where('slug', $term_slug)
+                        ->first();
 
-                if (!$term) {
-                    $term = Term::make($term_slug)->taxonomy($taxonomy_slug);
+                    if (!$term) {
+                        $term = Term::make()->taxonomy($taxonomy_slug)->slug($term_slug);
+                    }
+
+                    foreach ($term_data as $key => $value) {
+                        $term->set($key, $value);
+                    }
+
+                    $term->save();
+                } catch (\Exception $e) {
+                    Log::error("Error saving term {$term_slug} in taxonomy {$taxonomy_slug}: " . $e->getMessage());
                 }
-
-                foreach ($term_data as $key => $value) {
-                    $term->set($key, $value);
-                }
-
-                $term->save();
             }
         }
     }
@@ -147,7 +162,7 @@ class Migrator
      */
     private function createCollections()
     {
-        foreach (array_get($this->migration, 'collections', []) as $handle => $data) {
+        foreach (Arr::get($this->migration, 'collections', []) as $handle => $data) {
             $collection = Collection::findByHandle($handle);
 
             if (!$collection) {
@@ -184,7 +199,7 @@ class Migrator
 
                 $entry->date($meta['order']);
 
-                array_set($meta, 'data.slug', $slug);
+                Arr::set($meta, 'data.slug', $slug);
 
                 foreach ($meta['data'] as $key => $value) {
                     $entry->set($key, $value);
@@ -225,7 +240,7 @@ class Migrator
                 $page = Entry::make()->collection('pages')->slug($slug);
             }
 
-            array_set($meta, 'data.slug', $slug);
+            Arr::set($meta, 'data.slug', $slug);
 
             foreach ($meta['data'] as $key => $value) {
                 $page->set($key, $value);

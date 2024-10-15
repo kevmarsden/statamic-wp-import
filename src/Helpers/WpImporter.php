@@ -5,6 +5,7 @@ namespace Jezzdk\StatamicWpImport\Helpers;
 use Exception;
 use Statamic\Facades\Entry;
 use Statamic\Facades\Term;
+use Illuminate\Support\Arr;
 
 class WpImporter
 {
@@ -24,7 +25,7 @@ class WpImporter
         foreach ($prepared['pages'] as $page_url => $page) {
             $summary['pages'][$page_url] = [
                 'url' => $page_url,
-                'title' => array_get($page['data'], 'title'),
+                'title' => Arr::get($page['data'], 'title'),
                 'exists' => !!Entry::findByUri($page_url),
                 '_checked' => true,
             ];
@@ -60,7 +61,7 @@ class WpImporter
             foreach ($terms as $slug => $term) {
                 $taxonomy_terms[$slug] = [
                     'slug' => $slug,
-                    'exists' => !!Term::query()->where('taxonomy', $taxonomy)->where('slug', $slug)->first(),
+                    'exists' => $this->termExists($taxonomy, $slug),
                     '_checked' => true,
                 ];
             }
@@ -80,4 +81,12 @@ class WpImporter
     {
         (new Migrator)->migrate($prepared, $summary);
     }
+
+	protected function termExists($taxonomy, $slug)
+	{
+		return Term::query()
+			->where('taxonomy', $taxonomy)
+			->where('slug', $slug)
+			->first() !== null;
+	}
 }
