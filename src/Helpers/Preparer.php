@@ -1,6 +1,6 @@
 <?php
 
-namespace Jezzdk\StatamicWpImport\Helpers;
+namespace RadPack\StatamicWpImport\Helpers;
 
 use Statamic\Facades\URL;
 use Statamic\Support\Str;
@@ -9,13 +9,14 @@ use Illuminate\Support\Arr;
 class Preparer
 {
     private $data;
+
     private $migration = [];
 
     public function prepare(array $data)
     {
         $this->data = $data;
 
-        if (!isset($this->data['pages']) || !is_array($this->data['pages'])) {
+        if (! isset($this->data['pages']) || ! is_array($this->data['pages'])) {
             $this->data['pages'] = [];
         }
 
@@ -54,14 +55,14 @@ class Preparer
 
     private function createTaxonomies()
     {
-        if (!isset($this->data['taxonomies'])) {
+        if (! isset($this->data['taxonomies'])) {
             return;
         }
 
         foreach ($this->data['taxonomies'] as $taxonomy_name => $terms) {
             $this->migration['taxonomies']->put($taxonomy_name, [
                 'title' => Str::title($taxonomy_name),
-                'route' => '/' . $taxonomy_name . '/{slug}'
+                'route' => '/'.$taxonomy_name.'/{slug}',
             ]);
 
             $this->migration['terms']->put($taxonomy_name, collect());
@@ -81,7 +82,7 @@ class Preparer
 
     private function createCollections()
     {
-        if (!isset($this->data['collections'])) {
+        if (! isset($this->data['collections'])) {
             return;
         }
 
@@ -94,13 +95,13 @@ class Preparer
     /**
      * Create a collection
      *
-     * @param  string $collection
+     * @param  string  $collection
      * @param  array  $entries
      * @return void
      */
     private function createCollection($collection, $entries)
     {
-        $route = '/' . $collection . '/{slug}';
+        $route = '/'.$collection.'/{slug}';
 
         $collection = str_replace('/', '-', $collection);
 
@@ -117,7 +118,7 @@ class Preparer
 
         $this->migration['collections']->put($collection, [
             'order' => $type,
-            'route' => $route
+            'route' => $route,
         ]);
 
         $this->migration['entries']->put($collection, collect());
@@ -126,7 +127,7 @@ class Preparer
     /**
      * Create the entries in a collection
      *
-     * @param  string $collection
+     * @param  string  $collection
      * @param  array  $entries
      * @return void
      */
@@ -142,13 +143,13 @@ class Preparer
     /**
      * Replace slugs in taxonomy fields with their IDs
      *
-     * @param  array $data  The array of data to modify
-     * @return array        The modified array
+     * @param  array  $data  The array of data to modify
+     * @return array The modified array
      */
     private function replaceTaxonomies($data)
     {
         foreach ($data as $field_name => &$value) {
-            if (!$this->isTaxonomyField($field_name)) {
+            if (! $this->isTaxonomyField($field_name)) {
                 continue;
             }
 
@@ -176,7 +177,7 @@ class Preparer
      * Is a given $key a taxonomy field name?
      *
      * @param  string  $key
-     * @return boolean
+     * @return bool
      */
     private function isTaxonomyField($key)
     {

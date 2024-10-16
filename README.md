@@ -2,11 +2,14 @@
 
 > Statamic WP Import can import simple content from your WP site.
 
-Note: This addon works in conjunction with a [Wordpress plugin](https://github.com/jezzdk/wordpress-to-statamic-exporter).
+Note: This addon works in conjunction with a [WordPress plugin](https://github.com/jezzdk/wordpress-to-statamic-exporter).
 
-## Disclaimer
+## Note
 
-This is basically a port of the official import script in Statamic v2, that has been wangjangled to work with v3. The only difference is that this does not import settings as globals, but this addons also downloads featured images.
+This is a rough addon the Rad Pack inherited from [@jezzdk](https://github.com/jezzdk). It's based on the v2 method of generating a JSON file with a separate WP plugin, which isn't ideal, but should still be functional.
+
+We're open to PRs and collaboration, though the Statamic Core Team is working on a different approach that will likely replace this in the near future.
+
 
 ## Features
 
@@ -50,12 +53,12 @@ You can use the events above to do your own downloading of images and what not. 
 You can search for this addon in the `Tools > Addons` section of the Statamic control panel and click **install**, or run the following command from your project root:
 
 ``` bash
-composer require jezzdk/statamic-wp-import
+composer require RadPack/statamic-wp-import
 ```
 
 ## How to Use
 
-First of all, you must export your data using the [Export to Statamic Wordpress Plugin](https://github.com/jezzdk/wordpress-to-statamic-exporter). Check anything you wish to export, but have the notes above in mind.
+First of all, you must export your data using the [Export to Statamic Wordpress Plugin](https://github.com/statamic/wordpress-to-statamic-exporter). Check anything you wish to export, but have the notes above in mind.
 
 Go to the `Tools > WP Import` section and upload the json file.
 
@@ -104,7 +107,7 @@ return [
 
 You can publish it with the command:
 
-`php artisan vendor:publish --tag=statamic-wp-import`
+`php artisan vendor:publish --tag=wp-import`
 
 ## Known issues
 

@@ -1,6 +1,6 @@
 <?php
 
-namespace Jezzdk\StatamicWpImport\Helpers;
+namespace RadPack\StatamicWpImport\Helpers;
 
 use Exception;
 use Statamic\Facades\Entry;
@@ -11,7 +11,7 @@ class WpImporter
 {
     public function prepare($data)
     {
-        if (!$data = json_decode($data, true)) {
+        if (! $data = json_decode($data, true)) {
             throw new Exception('Invalid export data format.');
         }
 
@@ -25,8 +25,8 @@ class WpImporter
         foreach ($prepared['pages'] as $page_url => $page) {
             $summary['pages'][$page_url] = [
                 'url' => $page_url,
-                'title' => Arr::get($page['data'], 'title'),
-                'exists' => !!Entry::findByUri($page_url),
+                'title' => array_get($page['data'], 'title'),
+                'exists' => (bool) Entry::findByUri($page_url),
                 '_checked' => true,
             ];
         }
@@ -36,7 +36,7 @@ class WpImporter
             $collection_entries = [];
 
             foreach ($entries as $slug => $entry) {
-                if ($has_duplicates = !!Entry::query()->where('collection', $collection)->where('slug', $slug)->first()) {
+                if ($has_duplicates = (bool) Entry::query()->where('collection', $collection)->where('slug', $slug)->first()) {
                     $duplicates++;
                 }
 
@@ -61,7 +61,7 @@ class WpImporter
             foreach ($terms as $slug => $term) {
                 $taxonomy_terms[$slug] = [
                     'slug' => $slug,
-                    'exists' => $this->termExists($taxonomy, $slug),
+                    'exists' => (bool) Term::query()->where('taxonomy', $taxonomy)->where('slug', $slug)->first(),
                     '_checked' => true,
                 ];
             }

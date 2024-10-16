@@ -1,6 +1,6 @@
 <?php
 
-namespace Jezzdk\StatamicWpImport\Helpers;
+namespace RadPack\StatamicWpImport\Helpers;
 
 use Exception;
 use Illuminate\Support\Facades\Http;
@@ -10,8 +10,8 @@ use Statamic\Facades\AssetContainer;
 use Statamic\Facades\Collection;
 use Statamic\Facades\Entry;
 use Statamic\Facades\Stache;
-use Statamic\Facades\Term;
 use Statamic\Facades\Taxonomy;
+use Statamic\Facades\Term;
 use Symfony\Component\HttpFoundation\File\UploadedFile;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Log;
@@ -34,9 +34,6 @@ class Migrator
 
     /**
      * Perform the migration
-     *
-     * @param $migration
-     * @param $summary
      */
     public function migrate($migration, $summary)
     {
@@ -57,7 +54,7 @@ class Migrator
     /**
      * Prepare the migration
      *
-     * @param array $migration
+     * @param  array  $migration
      * @return array
      */
     private function prepareMigration($migration)
@@ -74,8 +71,8 @@ class Migrator
     /**
      * Sort an array by folder depth (amount of slashes)
      *
-     * @param  array $arr An array with paths for keys
-     * @return array      The sorted array
+     * @param  array  $arr  An array with paths for keys
+     * @return array The sorted array
      */
     private function sortDeepest($arr)
     {
@@ -101,7 +98,7 @@ class Migrator
         foreach (Arr::get($this->migration, 'taxonomies', []) as $taxonomy_slug => $taxonomy_data) {
             $taxonomy = Taxonomy::findByHandle($taxonomy_slug);
 
-            if (!$taxonomy) {
+            if (! $taxonomy) {
                 $taxonomy = Taxonomy::make($taxonomy_slug);
             }
 
@@ -129,7 +126,7 @@ class Migrator
 
             foreach ($terms as $term_slug => $term_data) {
                 // Skip if this term was not checked in the summary.
-                if (!$this->summary['taxonomies'][$taxonomy_slug]['terms'][$term_slug]['_checked']) {
+                if (! $this->summary['taxonomies'][$taxonomy_slug]['terms'][$term_slug]['_checked']) {
                     continue;
                 }
 
@@ -139,17 +136,8 @@ class Migrator
                         ->where('slug', $term_slug)
                         ->first();
 
-                    if (!$term) {
-                        $term = Term::make()->taxonomy($taxonomy_slug)->slug($term_slug);
-                    }
-
-                    foreach ($term_data as $key => $value) {
-                        $term->set($key, $value);
-                    }
-
-                    $term->save();
-                } catch (\Exception $e) {
-                    Log::error("Error saving term {$term_slug} in taxonomy {$taxonomy_slug}: " . $e->getMessage());
+                if (! $term) {
+                    $term = Term::make($term_slug)->taxonomy($taxonomy_slug);
                 }
             }
         }
@@ -165,7 +153,7 @@ class Migrator
         foreach (Arr::get($this->migration, 'collections', []) as $handle => $data) {
             $collection = Collection::findByHandle($handle);
 
-            if (!$collection) {
+            if (! $collection) {
                 $collection = Collection::make($handle);
             }
 
@@ -187,13 +175,13 @@ class Migrator
         foreach ($this->migration['entries'] as $collection => $entries) {
             foreach ($entries as $slug => $meta) {
                 // Skip if this entry was not checked in the summary.
-                if (!$this->summary['collections'][$collection]['entries'][$slug]['_checked']) {
+                if (! $this->summary['collections'][$collection]['entries'][$slug]['_checked']) {
                     continue;
                 }
 
                 $entry = Entry::query()->where('collection', $collection)->where('slug', $slug)->first();
 
-                if (!$entry) {
+                if (! $entry) {
                     $entry = Entry::make()->collection($collection)->slug($slug);
                 }
 
@@ -227,7 +215,7 @@ class Migrator
     {
         foreach ($this->migration['pages'] as $url => $meta) {
             // Skip if this page was not checked in the summary.
-            if (!$this->summary['pages'][$url]['_checked']) {
+            if (! $this->summary['pages'][$url]['_checked']) {
                 continue;
             }
 
@@ -236,7 +224,7 @@ class Migrator
 
             $page = Entry::query()->where('collection', 'pages')->where('slug', $slug)->first();
 
-            if (!$page) {
+            if (! $page) {
                 $page = Entry::make()->collection('pages')->slug($slug);
             }
 
@@ -260,13 +248,10 @@ class Migrator
 
     /**
      * Create an asset from a URL
-     *
-     * @param string|null $url
-     * @return Asset|bool
      */
-    private function downloadAsset(string $url = null, string $collection, string $slug): Asset|bool
+    private function downloadAsset(?string $url, string $collection, string $slug): Asset|bool
     {
-        if (!$url) {
+        if (! $url) {
             return false;
         }
 
@@ -300,7 +285,8 @@ class Migrator
 
             return $asset;
         } catch (Exception $e) {
-            logger('Image download failed: ' . $e->getMessage());
+            logger('Image download failed: '.$e->getMessage());
+
             return false;
         }
     }
